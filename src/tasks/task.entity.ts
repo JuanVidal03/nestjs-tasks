@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEnum } from "class-validator";
+import { IsNotEmpty, IsString, IsEnum, IsEmpty } from "class-validator";
 
 export enum TaskStatus {
     PENDING = 'PENDING',
@@ -17,6 +17,5 @@ export class Task {
     @IsNotEmpty()
     description: string
     
-    @IsEnum(TaskStatus)
-    status!: TaskStatus
+    status?: TaskStatus
 }

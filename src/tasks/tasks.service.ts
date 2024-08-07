@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Task } from './task.entity';
 import { TaskStatus } from './task.entity';
+import { TaskResponse } from './interfaces/tasks.interface';
 
 @Injectable()
 export class TasksService {
@@ -13,67 +14,141 @@ export class TasksService {
     }];
     
 
-    getAllTasks(): Task[]{
-        return this.tasks;
+    getAllTasks(): TaskResponse{
+        try {
+
+            return {
+                status: HttpStatus.OK,
+                message: "Tasks retrieved successfully",
+                data: this.tasks
+            };
+            
+        } catch (error) {
+            throw new HttpException({
+                error: error.message,
+                message: "Error getting all tasks.",
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    createTask(title: string, description: string): Task{
-        
-        const task:Task = {
-            id: new Date().toISOString(),
-            title,
-            description,
-            status: TaskStatus.PENDING
+    createTask(title: string, description: string): TaskResponse{
+
+        try {
+
+            const task:Task = {
+                id: new Date().toISOString(),
+                title,
+                description,
+                status: TaskStatus.PENDING
+            }
+
+            this.tasks.push(task);
+            
+            return {
+                status: HttpStatus.CREATED,
+                message: "Task created successfully",
+                data: task,
+            };
+
+        } catch (error) {
+            throw new HttpException({
+                error: error.message,
+                message: "Error creating task",
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        this.tasks.push(task);
-        return task;
-
-    }
-
-    getTaskById(id: string): Task | string{
-        const findTask: Task = this.tasks.find(task => task.id === id);
-        if (!findTask) {
-            return `There is no task with id: ${id}`;
-        }
-
-        return findTask;
-
-    }
-
-    updateTask(id:string, updatedFields:Task){
-        
-        const findTask = this.getTaskById(id);
-        if (typeof findTask === 'string') {
-            return findTask;
-        }
-
-        const findIndexTask = this.tasks.findIndex(task => task.id === id);
-
-        const updatedTask: Task = {
-            id: findTask.id,
-            title: updatedFields.title || findTask.title,
-            description: updatedFields.description || findTask.description,
-            status: updatedFields.status || findTask.status
-        }
-
-        this.tasks.splice(findIndexTask, 1, updatedTask);
-
-        return this.tasks;
 
     }
 
-    deleteTask(id: string): Task[] | string{
+    getTaskById(id: string): TaskResponse{
 
-        const findTask = this.tasks.findIndex(task => task.id === id);
-        console.log(id, findTask);
+        try {
+            
+            const findTask: Task = this.tasks.find(task => task.id === id);
+            if (!findTask) {
+                return {
+                    status: HttpStatus.NOT_FOUND,
+                    message: `There is no task with id: ${id}`,
+                };
+            }
+
+            return {
+                status: HttpStatus.OK,
+                message: "Found task successfully",
+                data: findTask,
+            };
+            
+        } catch (error) {
+            throw new HttpException({
+                error: error.message,
+                message: `Error getting the task with id: ${id}`
+            }, HttpStatus.BAD_REQUEST);
+        }
+
+    }
+    
+    updateTask(id:string, updatedFields:Task): TaskResponse{
         
-        if (findTask < 0) {
-            return `There is no task with id: ${id}`;
+        try {
+            
+            const findTask = this.getTaskById(id);
+            if (!findTask) {
+                return findTask;
+            }
+
+            const findIndexTask = this.tasks.findIndex(task => task.id === id);
+
+            const updatedTask: Task = {
+                id: findTask.data.id,
+                title: updatedFields.title || findTask.data.title,
+                description: updatedFields.description || findTask.data.description,
+                status: updatedFields.status || findTask.data.status
+            }
+
+            this.tasks.splice(findIndexTask, 1, updatedTask);
+
+            return {
+                status: HttpStatus.OK,
+                message: `Task with id: ${id} has been updated successfully`,
+                data: this.tasks,
+            }
+            
+        } catch (error) {
+            throw new HttpException({
+                error: error.message,
+                message: `Error updating task with id: ${id}`,
+            }, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+    }
+
+
+    deleteTask(id: string): TaskResponse{
+
+        try {
+            
+        const findTaskIndex = this.tasks.findIndex(task => task.id === id);
+        if (findTaskIndex < 0) {
+            return {
+                status: HttpStatus.NOT_FOUND,
+                message: `There is no task with id: ${id}`,
+            };
         }
         
-        this.tasks.splice(findTask, 1);
-        return this.tasks;
+        this.tasks.splice(findTaskIndex, 1);
+
+        return {
+            status: HttpStatus.OK,
+            message: `Task with id: ${id} has deleted successfully`,
+            data: this.tasks,
+        };
+            
+        } catch (error) {
+            throw new HttpException({
+                error: error.message,
+                message: `Error deteleting the task with id: ${id}`
+            }, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
     }
 
 }
