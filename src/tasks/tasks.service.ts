@@ -1,26 +1,24 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Task } from './task.entity';
+import { TaskDto } from './task.entity';
 import { TaskStatus } from './task.entity';
 import { TaskResponse } from './interfaces/tasks.interface';
+import { InjectModel } from '@nestjs/mongoose';
+import { Task } from './schemas/tasks.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class TasksService {
 
-    private tasks: Task[] = [{
-        id: '1',
-        title: 'first task',
-        description: 'some task',
-        status: TaskStatus.PENDING
-    }];
-    
+    constructor( @InjectModel(Task.name) private taskModel: Model<Task> ){}
 
-    getAllTasks(): TaskResponse{
+    async getAllTasks(): Promise<TaskResponse>{
         try {
+            const tasks = await this.taskModel.find();
 
             return {
                 status: HttpStatus.OK,
                 message: "Tasks retrieved successfully",
-                data: this.tasks
+                data: tasks
             };
             
         } catch (error) {
@@ -31,23 +29,23 @@ export class TasksService {
         }
     }
 
-    createTask(title: string, description: string): TaskResponse{
+    async createTask(title: string, description: string): Promise<TaskResponse>{
 
         try {
 
-            const task:Task = {
-                id: new Date().toISOString(),
+            const task:TaskDto = {
                 title,
                 description,
                 status: TaskStatus.PENDING
             }
-
-            this.tasks.push(task);
+            
+            const createdTask = await this.taskModel.create(task);
+            createdTask.save();
             
             return {
                 status: HttpStatus.CREATED,
                 message: "Task created successfully",
-                data: task,
+                data: createdTask,
             };
 
         } catch (error) {
@@ -59,11 +57,13 @@ export class TasksService {
 
     }
 
-    getTaskById(id: string): TaskResponse{
+    async getTaskById(id: string): Promise<TaskResponse>{
 
         try {
             
-            const findTask: Task = this.tasks.find(task => task.id === id);
+            // const findTask: TaskDto = this.tasks.find(task => task.id === id);
+            const findTask: TaskDto = await this.taskModel.findById(id);
+
             if (!findTask) {
                 return {
                     status: HttpStatus.NOT_FOUND,
@@ -85,19 +85,19 @@ export class TasksService {
         }
 
     }
-    
-    updateTask(id:string, updatedFields:Task): TaskResponse{
+    /*
+    updateTask(id:string, updatedFields:TaskDto): TaskResponse{
         
         try {
             
             const findTask = this.getTaskById(id);
-            if (!findTask) {
+            if (findTask.status !== HttpStatus.OK) {
                 return findTask;
             }
 
             const findIndexTask = this.tasks.findIndex(task => task.id === id);
 
-            const updatedTask: Task = {
+            const updatedTask: TaskDto = {
                 id: findTask.data.id,
                 title: updatedFields.title || findTask.data.title,
                 description: updatedFields.description || findTask.data.description,
@@ -120,7 +120,6 @@ export class TasksService {
         }
 
     }
-
 
     deleteTask(id: string): TaskResponse{
 
@@ -149,6 +148,6 @@ export class TasksService {
             }, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
-    }
+    }*/
 
 }

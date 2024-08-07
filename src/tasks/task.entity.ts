@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEnum, IsEmpty } from "class-validator";
+import { IsNotEmpty, IsString } from "class-validator";
 
 export enum TaskStatus {
     PENDING = 'PENDING',
@@ -6,7 +6,7 @@ export enum TaskStatus {
     DONE = 'DONE',
 }
 
-export class Task {
+export class TaskDto {
     id?: string
     
     @IsString()

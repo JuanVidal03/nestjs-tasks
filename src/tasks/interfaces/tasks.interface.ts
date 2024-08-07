@@ -1,5 +1,5 @@
 import { HttpStatus } from "@nestjs/common";
-import { Task } from "../task.entity";
+import { TaskDto } from "../task.entity";
 
 export interface TaskResponse {
     status: HttpStatus,
