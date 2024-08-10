@@ -46,15 +46,14 @@ export class TasksController {
         return res.status(result.status).json(result);
     }
 
-    /*
     @Put(':id')
-    updateTask(
+    async updateTask(
         @Param('id') id:string,
         @Body() updatedTask: TaskDto,
         @Res() res:Response
     ){
-        const result: TaskResponse = this.taskService.updateTask(id, updatedTask); 
+        const result: TaskResponse = await this.taskService.updateTask(id, updatedTask); 
         return res.status(result.status).json(result);
-    }*/
+    }
 
 }

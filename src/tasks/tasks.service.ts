@@ -84,18 +84,16 @@ export class TasksService {
         }
 
     }
-    /*
-    updateTask(id:string, updatedFields:TaskDto): TaskResponse{
+    
+    async updateTask(id:string, updatedFields:TaskDto): Promise<TaskResponse>{
         
         try {
             
-            const findTask = this.getTaskById(id);
-            if (findTask.status !== HttpStatus.OK) {
+            const findTask = await this.getTaskById(id);
+            if (!findTask) {
                 return findTask;
             }
-
-            const findIndexTask = this.tasks.findIndex(task => task.id === id);
-
+            
             const updatedTask: TaskDto = {
                 id: findTask.data.id,
                 title: updatedFields.title || findTask.data.title,
@@ -103,12 +101,12 @@ export class TasksService {
                 status: updatedFields.status || findTask.data.status
             }
 
-            this.tasks.splice(findIndexTask, 1, updatedTask);
-
+            await this.taskModel.findByIdAndUpdate({ _id: id }, updatedTask);
+           
             return {
                 status: HttpStatus.OK,
                 message: `Task with id: ${id} has been updated successfully`,
-                data: this.tasks,
+                data: updatedTask,
             }
             
         } catch (error) {
@@ -119,7 +117,7 @@ export class TasksService {
         }
 
     }
-    */
+
 
     async deleteTask(id: string): Promise<TaskResponse>{
 
