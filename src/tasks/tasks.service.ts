@@ -60,8 +60,7 @@ export class TasksService {
     async getTaskById(id: string): Promise<TaskResponse>{
 
         try {
-            
-            // const findTask: TaskDto = this.tasks.find(task => task.id === id);
+
             const findTask: TaskDto = await this.taskModel.findById(id);
 
             if (!findTask) {
@@ -120,34 +119,35 @@ export class TasksService {
         }
 
     }
+    */
 
-    deleteTask(id: string): TaskResponse{
+    async deleteTask(id: string): Promise<TaskResponse>{
 
         try {
             
-        const findTaskIndex = this.tasks.findIndex(task => task.id === id);
-        if (findTaskIndex < 0) {
+        const findTask = await this.taskModel.findById(id);
+        if (!findTask) {
             return {
                 status: HttpStatus.NOT_FOUND,
-                message: `There is no task with id: ${id}`,
+                message: `There is no task with id: ${id}.`,
             };
         }
         
-        this.tasks.splice(findTaskIndex, 1);
+        await this.taskModel.deleteOne({ _id: id });
 
         return {
             status: HttpStatus.OK,
-            message: `Task with id: ${id} has deleted successfully`,
-            data: this.tasks,
+            message: `Task with id: ${id} has been deleted successfully.`,
+            data: [],
         };
             
         } catch (error) {
             throw new HttpException({
                 error: error.message,
-                message: `Error deteleting the task with id: ${id}`
+                message: `Error deteleting the task with id: ${id}.`
             }, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
-    }*/
+    }
 
 }

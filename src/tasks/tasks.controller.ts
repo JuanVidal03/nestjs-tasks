@@ -37,16 +37,14 @@ export class TasksController {
         return res.status(result.status).json(result);
     }
 
-    /*
     @Delete(':id')
-    deleteTask(
+    async deleteTask(
         @Param('id') id:string,
         @Res() res:Response
     ){
-        const result: TaskResponse = this.taskService.deleteTask(id);
+        const result: TaskResponse = await this.taskService.deleteTask(id);
         return res.status(result.status).json(result);
     }
-    */
 
     /*
     @Put(':id')
