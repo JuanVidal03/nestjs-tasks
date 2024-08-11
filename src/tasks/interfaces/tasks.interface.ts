@@ -1,10 +1,6 @@
-import { HttpStatus } from "@nestjs/common";
-import { TaskDto } from "../task.entity";
+import { TaskDto } from "../dto/task.entity";
 
 export interface TaskResponse {
-    status: HttpStatus,
     message: string,
-    // data: TaskDto[] | TaskDto | [],
-    data?: any,
-    error?: any
+    data: TaskDto[] | TaskDto | [],
 }

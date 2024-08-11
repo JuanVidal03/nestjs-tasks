@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Res } from '@nestjs/common';
-import { Response } from 'express';
 import { TasksService } from './tasks.service';
-import { TaskDto } from './task.entity';
+import { TaskDto } from './dto/task.entity';
 import { TaskResponse } from './interfaces/tasks.interface';
 
 
@@ -14,46 +13,37 @@ export class TasksController {
 
 
     @Get()
-    async getAllTasks(@Res() res:Response){
-        const result: TaskResponse = await this.taskService.getAllTasks();
-        return res.status(200).json(result);
-    }
-    
-    @Get(':id')
-    async getTaskById(
-        @Param('id') id: string,
-        @Res() res:Response
-    ){
-        const result: TaskResponse = await this.taskService.getTaskById(id); 
-        return res.status(result.status).json(result);
+    async getAllTasks(): Promise<TaskResponse>{
+        return await this.taskService.getAllTasks();
     }
 
     @Post()
     async createTask(
         @Body() newTask: TaskDto,
-        @Res() res:Response
-    ){
-        const result: TaskResponse = await this.taskService.createTask(newTask.title, newTask.description);
-        return res.status(result.status).json(result);
+    ): Promise<TaskResponse>{
+        return await this.taskService.createTask(newTask);
+    }
+
+    @Get(':id')
+    async getTaskById(
+        @Param('id') id: string,
+    ): Promise<TaskResponse>{
+        return await this.taskService.getTaskById(id);
     }
 
     @Delete(':id')
     async deleteTask(
         @Param('id') id:string,
-        @Res() res:Response
-    ){
-        const result: TaskResponse = await this.taskService.deleteTask(id);
-        return res.status(result.status).json(result);
+    ): Promise<TaskResponse>{
+        return await this.taskService.deleteTask(id);
     }
 
     @Put(':id')
     async updateTask(
         @Param('id') id:string,
-        @Body() updatedTask: TaskDto,
-        @Res() res:Response
-    ){
-        const result: TaskResponse = await this.taskService.updateTask(id, updatedTask); 
-        return res.status(result.status).json(result);
+        @Body() updatedTask: TaskDto
+    ): Promise<TaskResponse>{
+        return await this.taskService.updateTask(id, updatedTask); 
     }
 
 }

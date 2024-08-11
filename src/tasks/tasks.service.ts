@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { TaskDto } from './task.entity';
-import { TaskStatus } from './task.entity';
+import { TaskDto } from './dto/task.entity';
+import { TaskStatus } from './dto/task.entity';
 import { TaskResponse } from './interfaces/tasks.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Task } from './schemas/tasks.schema';
@@ -9,14 +9,15 @@ import { Model } from 'mongoose';
 @Injectable()
 export class TasksService {
 
-    constructor( @InjectModel(Task.name) private taskModel: Model<Task> ){}
+    constructor(
+        @InjectModel(Task.name) private taskModel: Model<Task>
+    ){}
 
     async getAllTasks(): Promise<TaskResponse>{
         try {
             const tasks = await this.taskModel.find();
 
             return {
-                status: HttpStatus.OK,
                 message: "Tasks retrieved successfully",
                 data: tasks
             };
@@ -29,13 +30,14 @@ export class TasksService {
         }
     }
 
-    async createTask(title: string, description: string): Promise<TaskResponse>{
+
+    async createTask(newTask: TaskDto): Promise<TaskResponse>{
 
         try {
 
             const task:TaskDto = {
-                title,
-                description,
+                title: newTask.title,
+                description: newTask.description,
                 status: TaskStatus.PENDING
             }
             
@@ -43,7 +45,6 @@ export class TasksService {
             createdTask.save();
             
             return {
-                status: HttpStatus.CREATED,
                 message: "Task created successfully",
                 data: createdTask,
             };
@@ -57,6 +58,7 @@ export class TasksService {
 
     }
 
+    // por que al intentar este metodo de manera negativa, hay una combinacion del httpException de la linea 69 y de la linea del catch?
     async getTaskById(id: string): Promise<TaskResponse>{
 
         try {
@@ -64,15 +66,13 @@ export class TasksService {
             const findTask: TaskDto = await this.taskModel.findById(id);
 
             if (!findTask) {
-                return {
-                    status: HttpStatus.NOT_FOUND,
-                    message: `There is no task with id: ${id}`,
-                };
+                throw new HttpException({
+                    message: `Task with id: ${id} has not been found.`
+                }, HttpStatus.NOT_FOUND);
             }
 
             return {
-                status: HttpStatus.OK,
-                message: "Found task successfully",
+                message: "Task found successfully.",
                 data: findTask,
             };
             
@@ -84,7 +84,7 @@ export class TasksService {
         }
 
     }
-    
+
     async updateTask(id:string, updatedFields:TaskDto): Promise<TaskResponse>{
         
         try {
@@ -95,16 +95,15 @@ export class TasksService {
             }
             
             const updatedTask: TaskDto = {
-                id: findTask.data.id,
-                title: updatedFields.title || findTask.data.title,
-                description: updatedFields.description || findTask.data.description,
-                status: updatedFields.status || findTask.data.status
+                id: findTask.data["_id"],
+                title: updatedFields.title || findTask.data["title"],
+                description: updatedFields.description || findTask.data["description"],
+                status: updatedFields.status || findTask.data["status"]
             }
 
             await this.taskModel.findByIdAndUpdate({ _id: id }, updatedTask);
            
             return {
-                status: HttpStatus.OK,
                 message: `Task with id: ${id} has been updated successfully`,
                 data: updatedTask,
             }
@@ -118,26 +117,23 @@ export class TasksService {
 
     }
 
-
+    // porque no entra en la condicional del if, sino que pasa de una vez al catch
     async deleteTask(id: string): Promise<TaskResponse>{
 
         try {
             
-        const findTask = await this.taskModel.findById(id);
-        if (!findTask) {
-            return {
-                status: HttpStatus.NOT_FOUND,
-                message: `There is no task with id: ${id}.`,
-            };
-        }
-        
-        await this.taskModel.deleteOne({ _id: id });
+            const findTask = await this.getTaskById(id);
+            if (!findTask) {
+                return findTask;
+            }
 
-        return {
-            status: HttpStatus.OK,
-            message: `Task with id: ${id} has been deleted successfully.`,
-            data: [],
-        };
+
+            await this.taskModel.deleteOne({ _id: id });
+
+            return {
+                message: `Task with id: ${id} has been deleted successfully.`,
+                data: [],
+            };
             
         } catch (error) {
             throw new HttpException({
